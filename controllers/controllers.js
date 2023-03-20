@@ -69,7 +69,7 @@ async function createInvoice(req, res) {
             year
         });
 
-        const customer = await Account.findOne({_id:customerId});
+        const customer = await Account.findOne({ _id: customerId });
         if (!customer) {
             return res.status(400).json({ message: 'Customer not found' });
         }
@@ -102,10 +102,17 @@ async function createInvoice(req, res) {
     }
 }
 
-function checkAccountArray(accountArray) {
+async function checkAccountArray(accountArray) {
     for (let i = 0; i < accountArray.length; i++) {
-        if (!accountArray[i].accountId || !accountArray[i].amount) {
+        if (!accountArray[i].amount) {
             return false;
+        }
+        else{
+            let account = await Account.findOne({ _id: accountArray[i].accountId });
+            if (!account) {
+                return false;
+            }
+
         }
     }
     return true;
@@ -121,71 +128,48 @@ function validateAccountArray(accountArray, totalAmount) {
 
 
 async function listInvoices(req, res) {
-    let { skip, limit, searchText } = req.query;
-    if (!skip) skip = 0;
-    if (!limit) limit = 10;
-    if (!searchText) searchText = "";
-    if (parseInt(skip) < 0 || parseInt(limit) < 0) {
-        return res.status(400).send("Please provide a valid skip and/or limit");
-    }
+    let { skip, limit, searchText } = req.body;
     try {
-        // const invoices = await Invoice.aggregate([
-        //     {
-        //         $match: {
-        //             $or: [                  // Will return any invoice that matches any of the following conditions, to make it all, use $and
-        //                 { invoiceNumber: { $regex: searchText, $options: 'i' } },
-        //                 { 'accountArray.accountName': { $regex: searchText, $options: 'i' } },
-        //                 { 'accountArray.amount': { $regex: searchText, $options: 'i' } },
-        //             ],
-        //         }
-        //     }
-        // ],
-        //     {
-        //         $skip: parseInt(skip) || 0,
-        //         $limit: parseInt(limit) || 10,
-        //         $sort: { createdAt: -1 }
-        //     })
-        // res.json(invoices);
+        let skipInt = parseInt(skip) || 0;
+        let limitInt = parseInt(limit) || 10;
+        let invoices = [];
+        if (!searchText) {
+            invoices = await Invoice.find()
+                .skip(skipInt)
+                .limit(limitInt)
+                .sort({ createdAt: -1 });
+            res.json(invoices);
 
-        ///////////// Fix this \\\\\\\\\\\\\\\\\\\\
-        const invoices = await Invoice.find({
-            $or: [                  // Will return any invoice that matches any of the following conditions, to make it all, use $and
-                { invoiceNumber: { $regex: searchText, $options: 'i' } },
-                { 'accountArray.accountName': { $regex: searchText, $options: 'i' } },
-                { 'accountArray.amount': { $regex: searchText, $options: 'i' } },
-            ],
-            
-        })
-            .skip(parseInt(skip) || 0)
-            .limit(parseInt(limit) || 10)
-            .sort({ createdAt: -1 });
-        res.json(invoices);
-    } catch (err) {
+        } else {
+            searchText = searchText.toLowerCase();
+            invoices = Invoice.find().populate("accountArray.accountId").then((invoices) => {
+                const invoice = invoices.filter((invoice)=>{
+                    // try to match the invoice number with the search text or the account name with the search text or the amount with the search text
+                    if(invoice.invoiceNumber.includes(searchText)) return true;
+                    for(let i=0; i<invoice.accountArray.length; i++) {
+                        if((invoice.accountArray[i].accountId.name).toLowerCase().includes(searchText)) return true;
+                        else if((invoice.accountArray[i].amount).toString().includes(searchText)) return true;
+                    }
+                }).slice(skipInt, skipInt+limitInt);
+                if(invoice.length === 0) return res.status(400).json({message: "No invoice found after applying the search criteria"});
+                res.json(invoice);
+            }).catch((err) => {
+                console.log(err);
+                return res.status(400).json({
+                    message: err.message
+                });
+            });
+
+        }
+    }catch (err) {
         console.log(err);
         return res.status(400).json({
             message: err.message
         });
     }
-    // try {
-    //     const invoices = await Invoice.find({
-    //         $or: [                  // Will return any invoice that matches any of the following conditions, to make it all, use $and
-    //             { invoiceNumber: { $regex: searchText, $options: 'i' } },
-    //             { 'accountArray.accountName': { $regex: searchText, $options: 'i' } },
-    //             { 'accountArray.amount': { $regex: searchText, $options: 'i' } },
-    //         ],
-    //     })
-    //         .skip(parseInt(skip) || 0)
-    //         .limit(parseInt(limit) || 10)
-    //         .sort({ createdAt: -1 });
-
-    //     res.json(invoices);
-    // } catch (error) {
-    //     console.log(error);
-    //     res.status(500).json({ message: 'Server Error' });
-    // }
 }
-module.exports = {
-    createAccount,
-    createInvoice,
-    listInvoices
-}
+        module.exports = {
+            createAccount,
+            createInvoice,
+            listInvoices
+        }

@@ -1,18 +1,12 @@
 
 # Invoice Creator
 
-This is the solution of the assignment given at link
-
-
-# Invoice Creator
-
 This is the solution of the assignment given at [link](https://rapidbooks.co/wp-content/uploads/2023/03/Backend-Internship-Assignment.pdf)
 
 
-## Author
+## Authors
 
 - [@Saurav-Navdhare](https://github.com/Saurav-Navdhare/)
-
 
 
 ## Installation
@@ -20,8 +14,9 @@ This is the solution of the assignment given at [link](https://rapidbooks.co/wp-
 Clone the project from the URL then
 Install npm packages
 
+enter your mongoose string into MONGO_URI in .env file
 ```bash
-  npm Install
+  npm install
 ```
 then run the development server using
 

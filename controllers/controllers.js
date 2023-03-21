@@ -135,9 +135,9 @@ async function listInvoices(req, res) {
         let invoices = [];
         if (!searchText) {
             invoices = await Invoice.find()
+                .sort({ date: -1 })
                 .skip(skipInt)
-                .limit(limitInt)
-                .sort({ createdAt: -1 });
+                .limit(limitInt);
             res.json(invoices);
 
         } else {
@@ -150,6 +150,8 @@ async function listInvoices(req, res) {
                         if((invoice.accountArray[i].accountId.name).toLowerCase().includes(searchText)) return true;
                         else if((invoice.accountArray[i].amount).toString().includes(searchText)) return true;
                     }
+                }).sort((a, b)=>{
+                    return new Date(b.date) - new Date(a.date);
                 }).slice(skipInt, skipInt+limitInt);
                 if(invoice.length === 0) return res.status(400).json({message: "No invoice found after applying the search criteria"});
                 res.json(invoice);

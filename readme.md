@@ -12,9 +12,10 @@ This is the solution of the assignment given at [link](https://rapidbooks.co/wp-
 ## Installation
 
 Clone the project from the URL then
-Install npm packages
 
-enter your mongoose string into MONGO_URI in .env file
+Enter your mongoose string into MONGO_URI in .env file
+
+Install npm packages
 ```bash
   npm install
 ```

@@ -13,8 +13,8 @@ This is the solution of the assignment given at [link](https://rapidbooks.co/wp-
 
 Clone the project from the URL then
 
-Enter your mongoose string into MONGO_URI in .env file
-
+Enter your mongoose string into MONGO_URI in .env file <br>
+*Note : The app won't work without the string*<br><br>
 Install npm packages
 ```bash
   npm install
